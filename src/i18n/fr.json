@@ -1,0 +1,65 @@
+{
+  "appName": "Carte de Strasbourg",
+  "layers": {
+    "title": "Calques",
+    "museum": "Musées",
+    "sight": "Sites",
+    "restaurant": "Restaurants",
+    "cafe": "Cafés",
+    "toilets": "Toilettes",
+    "parking": "Parkings",
+    "velhop": "Stations Vélhop"
+  },
+  "drawing": {
+    "title": "Dessiner",
+    "pen": "Stylo",
+    "eraser": "Gomme",
+    "clear": "Tout effacer",
+    "confirmClear": "Effacer tous les dessins ?"
+  },
+  "poi": {
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "website": "Site web",
+    "hours": "Horaires",
+    "reserve": "Réserver",
+    "directions": "Itinéraire"
+  },
+  "parking": {
+    "free": "libres",
+    "total": "total",
+    "open": "Ouvert",
+    "closed": "Fermé",
+    "unknown": "Inconnu",
+    "lastUpdated": "Mis à jour",
+    "offline": "Données parking indisponibles hors ligne"
+  },
+  "toilet": {
+    "accessible": "Accessible PMR",
+    "notAccessible": "Non accessible",
+    "seasonal": "Saisonnier",
+    "hours": "Horaires",
+    "type": {
+      "fixe": "Fixe",
+      "automatique": "Automatique",
+      "mobile": "Mobile"
+    }
+  },
+  "velhop": {
+    "available": "vélos disponibles",
+    "free": "bornes libres",
+    "total": "Bornes totales"
+  },
+  "search": {
+    "placeholder": "Rechercher un lieu..."
+  },
+  "legend": {
+    "high": "Disponible",
+    "medium": "Se remplit",
+    "low": "Presque plein / vide",
+    "unknown": "Inconnu"
+  },
+  "offline": {
+    "message": "Vous êtes hors ligne — les données parking et Vélhop peuvent être obsolètes"
+  }
+}

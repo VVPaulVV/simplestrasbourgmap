@@ -1,0 +1,65 @@
+{
+  "appName": "Strasbourg Map",
+  "layers": {
+    "title": "Layers",
+    "museum": "Museums",
+    "sight": "Sights",
+    "restaurant": "Restaurants",
+    "cafe": "Cafés",
+    "toilets": "Toilets",
+    "parking": "Parking",
+    "velhop": "Vélhop Stations"
+  },
+  "drawing": {
+    "title": "Draw",
+    "pen": "Pen",
+    "eraser": "Eraser",
+    "clear": "Clear all",
+    "confirmClear": "Clear all drawings?"
+  },
+  "poi": {
+    "address": "Address",
+    "phone": "Phone",
+    "website": "Website",
+    "hours": "Hours",
+    "reserve": "Reserve",
+    "directions": "Directions"
+  },
+  "parking": {
+    "free": "free",
+    "total": "total",
+    "open": "Open",
+    "closed": "Closed",
+    "unknown": "Unknown",
+    "lastUpdated": "Updated",
+    "offline": "Parking data unavailable offline"
+  },
+  "toilet": {
+    "accessible": "Wheelchair accessible",
+    "notAccessible": "Not accessible",
+    "seasonal": "Seasonal",
+    "hours": "Hours",
+    "type": {
+      "fixe": "Fixed",
+      "automatique": "Automatic",
+      "mobile": "Mobile"
+    }
+  },
+  "velhop": {
+    "available": "bikes available",
+    "free": "free docks",
+    "total": "Total docks"
+  },
+  "search": {
+    "placeholder": "Search places..."
+  },
+  "legend": {
+    "high": "Available",
+    "medium": "Filling up",
+    "low": "Almost full / empty",
+    "unknown": "Unknown"
+  },
+  "offline": {
+    "message": "You are offline — live parking and Vélhop data may be outdated"
+  }
+}
