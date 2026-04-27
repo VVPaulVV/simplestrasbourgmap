@@ -47,7 +47,7 @@ export default function LayerControl({ layers, onToggle }) {
             color={layers[key] ? LAYER_COLORS[key] : '#9ca3af'}
           />
           <span className="layer-label">{t(`layers.${key}`)}</span>
-          <div className="layer-check" />
+
         </div>
       ))}
     </div>

@@ -84,7 +84,7 @@ export default function App() {
       </header>
 
       <div className="main">
-        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+        <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
           <LayerControl layers={layers} onToggle={toggleLayer} />
         </aside>
 
@@ -98,6 +98,7 @@ export default function App() {
             drawingActive={drawingActive}
             lang={lang}
             flyTarget={flyTarget}
+            sidebarOpen={sidebarOpen}
           />
 
           <MapLegend />
