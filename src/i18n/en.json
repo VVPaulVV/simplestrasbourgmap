@@ -61,5 +61,13 @@
   },
   "offline": {
     "message": "You are offline — live parking and Vélhop data may be outdated"
+  },
+  "share": {
+    "title": "Share Drawings",
+    "instructions": "Scan this QR code with another device to transfer the drawings.",
+    "copy": "Copy link",
+    "copied": "Copied!",
+    "tooLarge": "Your drawing is too complex to share via QR code. Try clearing some strokes and sharing again.",
+    "noDrawings": "No drawings to share yet."
   }
 }

@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { useMap } from 'react-map-gl';
+import { downloadDrawings } from '../utils/drawingShare';
 
-const COLORS = ['#e63946', '#2a9d8f', '#e9c46a', '#264653', '#f4a261', '#6a0572', '#000000'];
-const BRUSH_SIZES = [3, 6, 14];
+export const COLORS = ['#e63946', '#2a9d8f', '#e9c46a', '#264653', '#f4a261', '#6a0572', '#000000'];
+export const BRUSH_SIZES = [3, 6, 14];
 const STORAGE_KEY = 'map_drawings_v3';
 
-export default function DrawingCanvas({ active }) {
+const DrawingCanvas = forwardRef(({ active, color, sizeIdx, erasing, clearTrigger, lang }, ref) => {
   const { current: map } = useMap();
   const canvasRef = useRef(null);
   const drawing = useRef(false);
@@ -13,10 +14,9 @@ export default function DrawingCanvas({ active }) {
   const strokesRef = useRef([]); // [{color, size, points: [{lng,lat}]}]
   const currentStroke = useRef(null);
 
-  const [color, setColor] = useState('#e63946');
-  const [sizeIdx, setSizeIdx] = useState(0);
-  const [erasing, setErasing] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  useImperativeHandle(ref, () => ({
+    getStrokes: () => strokesRef.current
+  }));
 
   // Project geographic point to canvas pixel
   const project = useCallback((lngLat) => {
@@ -70,13 +70,27 @@ export default function DrawingCanvas({ active }) {
     map.on('zoom', redraw);
     map.on('resize', resizeCanvas);
 
-    // Load saved strokes
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        strokesRef.current = JSON.parse(saved);
-        redraw();
-      } catch (e) {}
+    // Check for shared drawings in URL
+    const params = new URLSearchParams(window.location.search);
+    const sharedCode = params.get('code');
+    if (sharedCode) {
+      downloadDrawings(sharedCode)
+        .then(strokes => {
+          strokesRef.current = strokes;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(strokes));
+          window.history.replaceState({}, '', window.location.pathname);
+          redraw();
+        })
+        .catch(e => console.warn('Failed to import shared drawings', e));
+    } else {
+      // Load saved strokes
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          strokesRef.current = JSON.parse(saved);
+          redraw();
+        } catch (e) {}
+      }
     }
 
     return () => {
@@ -187,78 +201,39 @@ export default function DrawingCanvas({ active }) {
     lastPos.current = null;
   }
 
+  useEffect(() => {
+    if (clearTrigger > 0) {
+      clearAll();
+    }
+  }, [clearTrigger]);
+
   function clearAll() {
     strokesRef.current = [];
     const canvas = canvasRef.current;
     if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
     localStorage.removeItem(STORAGE_KEY);
-    setShowConfirm(false);
   }
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: 'absolute',
-          top: 0, left: 0,
-          zIndex: 500,
-          pointerEvents: active ? 'all' : 'none',
-          cursor: active ? (erasing ? 'cell' : 'crosshair') : 'default',
-          touchAction: 'none',
-        }}
-        onMouseDown={startDraw}
-        onMouseMove={continueDraw}
-        onMouseUp={endDraw}
-        onMouseLeave={endDraw}
-        onTouchStart={startDraw}
-        onTouchMove={continueDraw}
-        onTouchEnd={endDraw}
-      />
-
-      {active && (
-        <div className="drawing-toolbar">
-          <div className="drawing-colors">
-            {COLORS.map(c => (
-              <button
-                key={c}
-                className={`color-swatch ${color === c && !erasing ? 'active' : ''}`}
-                style={{ background: c }}
-                onClick={() => { setColor(c); setErasing(false); }}
-              />
-            ))}
-          </div>
-          <div className="drawing-sizes">
-            {BRUSH_SIZES.map((s, i) => (
-              <button
-                key={s}
-                className={`size-btn ${sizeIdx === i && !erasing ? 'active' : ''}`}
-                onClick={() => { setSizeIdx(i); setErasing(false); }}
-              >
-                <span style={{ width: s * 2, height: s * 2, borderRadius: '50%', background: '#6b7280', display: 'inline-block' }} />
-              </button>
-            ))}
-          </div>
-          <button className={`tool-btn ${erasing ? 'active' : ''}`} onClick={() => setErasing(e => !e)}>
-            Erase
-          </button>
-          <button className="tool-btn tool-btn-danger" onClick={() => setShowConfirm(true)}>
-            Clear
-          </button>
-        </div>
-      )}
-
-      {showConfirm && (
-        <div className="confirm-overlay">
-          <div className="confirm-dialog">
-            <p>Clear all drawings?</p>
-            <div className="confirm-actions">
-              <button className="btn-danger" onClick={clearAll}>Yes, clear</button>
-              <button onClick={() => setShowConfirm(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: 'absolute',
+        top: 0, left: 0,
+        zIndex: 500,
+        pointerEvents: active ? 'all' : 'none',
+        cursor: active ? (erasing ? 'cell' : 'crosshair') : 'default',
+        touchAction: 'none',
+      }}
+      onMouseDown={startDraw}
+      onMouseMove={continueDraw}
+      onMouseUp={endDraw}
+      onMouseLeave={endDraw}
+      onTouchStart={startDraw}
+      onTouchMove={continueDraw}
+      onTouchEnd={endDraw}
+    />
   );
-}
+});
+
+export default DrawingCanvas;

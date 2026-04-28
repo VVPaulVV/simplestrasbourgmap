@@ -61,5 +61,13 @@
   },
   "offline": {
     "message": "Vous êtes hors ligne — les données parking et Vélhop peuvent être obsolètes"
+  },
+  "share": {
+    "title": "Partager les dessins",
+    "instructions": "Scannez ce QR code avec un autre appareil pour transférer les dessins.",
+    "copy": "Copier le lien",
+    "copied": "Copié !",
+    "tooLarge": "Votre dessin est trop complexe pour être partagé via QR code. Essayez d'effacer quelques traits.",
+    "noDrawings": "Aucun dessin à partager."
   }
 }

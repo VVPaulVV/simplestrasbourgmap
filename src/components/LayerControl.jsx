@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   IconBuildingArch,
@@ -29,6 +30,31 @@ const LAYER_COLORS = {
   velhop: '#16a34a',
 };
 
+function LayerItem({ layerKey, Icon, label, active, onToggle }) {
+  const [pressing, setPressing] = useState(false);
+
+  return (
+    <div
+      className={`layer-item ${active ? 'active' : ''}`}
+      style={{
+        transform: pressing ? 'scale(0.95)' : 'scale(1)',
+        transition: pressing
+          ? 'transform 0.08s ease'
+          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, border 0.15s ease',
+      }}
+      onMouseDown={() => setPressing(true)}
+      onMouseUp={() => { setPressing(false); onToggle(layerKey); }}
+      onMouseLeave={() => setPressing(false)}
+      onTouchStart={() => setPressing(true)}
+      onTouchEnd={() => { setPressing(false); onToggle(layerKey); }}
+    >
+      <Icon size={16} stroke={1.5} color={active ? LAYER_COLORS[layerKey] : '#9ca3af'} style={{ transition: 'color 0.2s ease' }} />
+      <span className="layer-label">{label}</span>
+      <div className="layer-check" />
+    </div>
+  );
+}
+
 export default function LayerControl({ layers, onToggle }) {
   const { t } = useTranslation();
 
@@ -36,19 +62,14 @@ export default function LayerControl({ layers, onToggle }) {
     <div className="layer-control">
       <div className="layer-control-title">{t('layers.title')}</div>
       {LAYER_DEFS.map(({ key, Icon }) => (
-        <div
+        <LayerItem
           key={key}
-          className={`layer-item ${layers[key] ? 'active' : ''}`}
-          onClick={() => onToggle(key)}
-        >
-          <Icon
-            size={16}
-            stroke={1.5}
-            color={layers[key] ? LAYER_COLORS[key] : '#9ca3af'}
-          />
-          <span className="layer-label">{t(`layers.${key}`)}</span>
-
-        </div>
+          layerKey={key}
+          Icon={Icon}
+          label={t(`layers.${key}`)}
+          active={layers[key]}
+          onToggle={onToggle}
+        />
       ))}
     </div>
   );

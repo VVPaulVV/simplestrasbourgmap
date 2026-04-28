@@ -11,13 +11,15 @@ import {
   IconParking,
   IconBike,
   IconNavigation,
+  IconShare,
 } from '@tabler/icons-react';
+import DrawingShareModal from './DrawingShareModal';
 
 import pois from '../data/pois.json';
 import toilets from '../data/toilets.json';
 import { useParking } from '../hooks/useParking';
 import { useVelhop } from '../hooks/useVelhop';
-import DrawingCanvas from './DrawingCanvas';
+import DrawingCanvas, { COLORS, BRUSH_SIZES } from './DrawingCanvas';
 import POIPopup from './POIPopup';
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
@@ -38,6 +40,13 @@ const CATEGORY_ICONS = {
 };
 
 function PinMarker({ color, Icon, size = 36 }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div style={{
       width: size,
@@ -48,6 +57,10 @@ function PinMarker({ color, Icon, size = 36 }) {
       justifyContent: 'center',
       cursor: 'pointer',
       filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.25))',
+      transform: visible ? 'scale(1) translateY(0)' : 'scale(0.3) translateY(20px)',
+      opacity: visible ? 1 : 0,
+      transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
+      transformOrigin: 'bottom center',
     }}>
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -69,6 +82,13 @@ function PinMarker({ color, Icon, size = 36 }) {
 }
 
 function SquareMarker({ color, Icon, label }) {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 10);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div style={{
       width: 32, height: 32,
@@ -81,6 +101,10 @@ function SquareMarker({ color, Icon, label }) {
       cursor: 'pointer',
       filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
       gap: 1,
+      transform: visible ? 'scale(1) translateY(0)' : 'scale(0.3) translateY(10px)',
+      opacity: visible ? 1 : 0,
+      transition: 'transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease',
+      transformOrigin: 'bottom center',
     }}>
       <Icon size={14} stroke={2} color="white" />
       {label !== undefined && (
@@ -92,13 +116,90 @@ function SquareMarker({ color, Icon, label }) {
   );
 }
 
-export default function MapView({ layers, drawingActive, lang, flyTarget, sidebarOpen }) {
+function ColorSwatch({ c, active, onClick }) {
+  const [pressing, setPressing] = useState(false);
+
+  return (
+    <button
+      className={`color-swatch ${active ? 'active' : ''}`}
+      style={{
+        background: c,
+        transform: pressing ? 'scale(0.88)' : active ? 'scale(1.2)' : 'scale(1)',
+        transition: pressing
+          ? 'transform 0.08s ease'
+          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        border: c === '#ffffff' ? '1px solid #ccc' : 'none',
+      }}
+      onMouseDown={() => setPressing(true)}
+      onMouseUp={() => { setPressing(false); onClick(c); }}
+      onMouseLeave={() => setPressing(false)}
+      onTouchStart={() => setPressing(true)}
+      onTouchEnd={() => { setPressing(false); onClick(c); }}
+    />
+  );
+}
+
+function SizeButton({ s, i, active, onClick }) {
+  const [pressing, setPressing] = useState(false);
+
+  return (
+    <button
+      className={`size-btn ${active ? 'active' : ''}`}
+      style={{
+        transform: pressing ? 'scale(0.88)' : 'scale(1)',
+        transition: pressing
+          ? 'transform 0.08s ease'
+          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+      onMouseDown={() => setPressing(true)}
+      onMouseUp={() => { setPressing(false); onClick(i); }}
+      onMouseLeave={() => setPressing(false)}
+      onTouchStart={() => setPressing(true)}
+      onTouchEnd={() => { setPressing(false); onClick(i); }}
+    >
+      <span style={{ width: s * 2, height: s * 2, borderRadius: '50%', background: '#6b7280', display: 'inline-block' }} />
+    </button>
+  );
+}
+
+function ToolButton({ className, onClick, children }) {
+  const [pressing, setPressing] = useState(false);
+
+  return (
+    <button
+      className={className}
+      style={{
+        transform: pressing ? 'scale(0.93)' : 'scale(1)',
+        transition: pressing
+          ? 'transform 0.08s ease'
+          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+      }}
+      onMouseDown={() => setPressing(true)}
+      onMouseUp={() => { setPressing(false); onClick?.(); }}
+      onMouseLeave={() => setPressing(false)}
+      onTouchStart={() => setPressing(true)}
+      onTouchEnd={() => { setPressing(false); onClick?.(); }}
+    >
+      {children}
+    </button>
+  );
+}
+
+export default function MapView({ layers, drawingActive, drawingVisible, drawingClosing, lang, flyTarget, sidebarOpen }) {
   const { t } = useTranslation();
   const mapRef = useRef(null);
+  const drawingCanvasRef = useRef(null);
   const [selectedPOI, setSelectedPOI] = useState(null);
   const [selectedToilet, setSelectedToilet] = useState(null);
   const [selectedParking, setSelectedParking] = useState(null);
   const [selectedVelhop, setSelectedVelhop] = useState(null);
+
+  const [color, setColor] = useState('#e63946');
+  const [sizeIdx, setSizeIdx] = useState(0);
+  const [erasing, setErasing] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [clearTrigger, setClearTrigger] = useState(0);
 
   const { parkings, lastUpdated: parkingUpdated } = useParking();
   const { stations: velhopStations, lastUpdated: velhopUpdated } = useVelhop();
@@ -282,11 +383,86 @@ export default function MapView({ layers, drawingActive, lang, flyTarget, sideba
           </Popup>
         )}
 
-        <DrawingCanvas active={drawingActive} />
+        <DrawingCanvas
+          ref={drawingCanvasRef}
+          active={drawingActive}
+          color={color}
+          sizeIdx={sizeIdx}
+          erasing={erasing}
+          clearTrigger={clearTrigger}
+          lang={lang}
+        />
       </Map>
 
-      {drawingActive && (
-        <div className="drawing-mode-banner">✏ Drawing mode</div>
+      {drawingVisible && (
+        <div className={`drawing-toolbar ${drawingClosing ? 'closing' : ''}`}>
+          <div className="drawing-colors">
+            {COLORS.map(c => (
+              <ColorSwatch
+                key={c}
+                c={c}
+                active={color === c && !erasing}
+                onClick={(c) => { setColor(c); setErasing(false); }}
+              />
+            ))}
+          </div>
+          <div className="drawing-sizes">
+            {BRUSH_SIZES.map((s, i) => (
+              <SizeButton
+                key={s}
+                s={s}
+                i={i}
+                active={sizeIdx === i && !erasing}
+                onClick={(i) => { setSizeIdx(i); setErasing(false); }}
+              />
+            ))}
+          </div>
+          <ToolButton
+            className={`tool-btn ${erasing ? 'active' : ''}`}
+            onClick={() => setErasing(e => !e)}
+          >
+            Erase
+          </ToolButton>
+          <ToolButton
+            className="tool-btn tool-btn-danger"
+            onClick={() => setShowConfirm(true)}
+          >
+            Clear
+          </ToolButton>
+          <ToolButton
+            className="tool-btn"
+            onClick={() => setShowShare(true)}
+          >
+            <IconShare size={14} stroke={1.5} />
+            Share
+          </ToolButton>
+        </div>
+      )}
+
+      {drawingVisible && (
+        <div className={`drawing-mode-banner ${drawingClosing ? 'closing' : ''}`}>
+          ✏ Drawing mode
+        </div>
+      )}
+
+      {showConfirm && (
+        <div className="confirm-overlay">
+          <div className="confirm-dialog">
+            <p>Clear all drawings?</p>
+            <div className="confirm-actions">
+              <button className="btn-danger" onClick={() => { setClearTrigger(prev => prev + 1); setShowConfirm(false); }}>Yes, clear</button>
+              <button onClick={() => setShowConfirm(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showShare && (
+        <DrawingShareModal
+          onClose={() => setShowShare(false)}
+          strokes={drawingCanvasRef.current?.getStrokes() || []}
+          lang={lang}
+        />
       )}
 
       {/* Legend */}

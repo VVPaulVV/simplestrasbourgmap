@@ -10,8 +10,32 @@ const TOPIC_ICONS = {
   touristtax: IconBuildingBank,
 };
 
+function NavButton({ topic, active, onClick, lang }) {
+  const [pressing, setPressing] = useState(false);
+  const Icon = TOPIC_ICONS[topic.id];
+
+  return (
+    <button
+      className={`info-nav-btn ${active ? 'active' : ''}`}
+      style={{
+        transform: pressing ? 'scale(0.94)' : 'scale(1)',
+        transition: pressing
+          ? 'transform 0.08s ease'
+          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease',
+      }}
+      onMouseDown={() => setPressing(true)}
+      onMouseUp={() => { setPressing(false); onClick(topic.id); }}
+      onMouseLeave={() => setPressing(false)}
+      onTouchStart={() => setPressing(true)}
+      onTouchEnd={() => { setPressing(false); onClick(topic.id); }}
+    >
+      {Icon && <Icon size={16} stroke={1.5} />}
+      <span>{topic.title[lang] || topic.title.en}</span>
+    </button>
+  );
+}
+
 export default function InfoPanel({ open, onClose, lang }) {
-  const { t } = useTranslation();
   const [activeId, setActiveId] = useState(INFO_TOPICS[0].id);
 
   const topic = INFO_TOPICS.find(t => t.id === activeId);
@@ -28,19 +52,15 @@ export default function InfoPanel({ open, onClose, lang }) {
         </div>
         <div className="info-panel-body">
           <nav className="info-nav">
-            {INFO_TOPICS.map(topic => {
-              const Icon = TOPIC_ICONS[topic.id];
-              return (
-                <button
-                  key={topic.id}
-                  className={`info-nav-btn ${activeId === topic.id ? 'active' : ''}`}
-                  onClick={() => setActiveId(topic.id)}
-                >
-                  {Icon && <Icon size={16} stroke={1.5} />}
-                  <span>{topic.title[lang] || topic.title.en}</span>
-                </button>
-              );
-            })}
+            {INFO_TOPICS.map(topic => (
+              <NavButton
+                key={topic.id}
+                topic={topic}
+                active={activeId === topic.id}
+                onClick={setActiveId}
+                lang={lang}
+              />
+            ))}
           </nav>
           <div className="info-content">
             <h2 className="info-topic-title">
